@@ -5,6 +5,9 @@
   "devDependencies": {
     "bun-types": "latest"
   },
+  "scripts": {
+    "migrate": "bun run db/migrate.ts"
+  },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },

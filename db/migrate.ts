@@ -19,9 +19,9 @@ const SqlLive = Sql.client.layer({
 const MigratorLive = Sql.migrator
     .layer({
         loader: Sql.migrator.fromFileSystem(
-            fileURLToPath(new URL("src/migrations", import.meta.url))
+            fileURLToPath(new URL("migrations", import.meta.url))
         ),
-        schemaDirectory: "src/migrations"
+        schemaDirectory: "migrations"
     })
     .pipe(Layer.provide(SqlLive))
 
