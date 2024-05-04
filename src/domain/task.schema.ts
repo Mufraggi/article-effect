@@ -4,12 +4,12 @@ import * as S from "@effect/schema/Schema"
 
 export const Task = S.Struct({
     id: S.UUID,
-    taskName: S.String,
-    taskDescription: S.String,
+    task_name: S.String,
+    task_description: S.String,
     status: S.String,
-    createdAt: S.DateFromSelf,
-    updatedAt: S.DateFromSelf
+    created_at: S.DateFromSelf,
+    updated_at: S.DateFromSelf
 })
-export const InsertTaskSchema = Task.pipe(S.omit("id", "createdAt", "updatedAt"))
+export const InsertTaskSchema = Task.pipe(S.omit("id", "created_at", "updated_at"))
 export type TaskInsert = S.Schema.Type<typeof InsertTaskSchema>
 export type TaskSchema = S.Schema.Type<typeof Task>
