@@ -1,28 +1,12 @@
-import {Config, Effect, Layer, Match, pipe} from "effect"
-import {NodeRuntime} from "@effect/platform-node"
-import * as Sql from "@effect/sql-pg"
+import {BunHttpServer, BunRuntime} from "@effect/platform-bun";
+import * as Http from "@effect/platform/HttpServer"
+import {health, test} from "./src/api/health/health.route.ts";
+import {Config, Effect, Layer} from "effect";
+import {insertTask} from "./src/api/tasks/insetTask.ts";
+import * as Sql from "@effect/sql-pg";
 import * as Secret from "effect/Secret";
-import {InitTaskRepository} from "./src/repositories/task.repository.ts";
-import {InsertTaskSchema, TaskInsert, TaskSchema} from "./src/domain/task.schema.ts";
-import {NoSuchElementException} from "effect/Cause";
-import {undefined} from "effect/Match";
+import {getTaskById} from "./src/api/tasks/getById.ts";
 
-
-const insert = Effect.gen(function* (_) {
-    const repository = yield* InitTaskRepository
-    const task: TaskInsert = {
-        task_name: "test1",
-        task_description: "la description",
-        status: "open"
-    }
-    return yield* repository.insert(task)
-})
-
-
-const getById = Effect.gen(function* (_) {
-    const repository = yield* InitTaskRepository
-    return yield* repository.getById("26f3edba-88ca-4d3b-a94f-e725e3ea8a2a")
-})
 
 const SqlLive = Sql.client.layer({
     database: Config.succeed("gdg"),
@@ -31,10 +15,18 @@ const SqlLive = Sql.client.layer({
     password: Config.succeed(Secret.fromString("password")),
 })
 
+const a = Layer.mergeAll(SqlLive)
 
-//pipe(insert, Effect.provide(SqlLive), Effect.runPromise).then(r => console.log(r))
-pipe(getById, Effect.provide(SqlLive), Effect.runPromise).then(r => Match.value(r
-).pipe(Match.when(
-    {"_tag": "Some"},
-    (task) => task.value,
-), Match.orElse(() => "Oh, not John"))).then(x => console.log(x))
+const ServerLive = BunHttpServer.server.layer({port: 3000})
+const HttpLive = Http.router.empty.pipe(
+    health,
+    insertTask,
+    getTaskById,
+    Effect.catchTag("RouteNotFound", () => Http.response.empty({status: 404})),
+    Http.server.serve(Http.middleware.logger),
+    Http.server.withLogAddress,
+    Layer.provide(a),
+    Layer.provide(ServerLive),
+)
+
+BunRuntime.runMain(Layer.launch(HttpLive))

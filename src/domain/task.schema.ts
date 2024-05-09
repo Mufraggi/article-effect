@@ -13,3 +13,6 @@ export const Task = S.Struct({
 export const InsertTaskSchema = Task.pipe(S.omit("id", "created_at", "updated_at"))
 export type TaskInsert = S.Schema.Type<typeof InsertTaskSchema>
 export type TaskSchema = S.Schema.Type<typeof Task>
+export const TaskId = S.Struct({
+    id: S.UUID,
+});
